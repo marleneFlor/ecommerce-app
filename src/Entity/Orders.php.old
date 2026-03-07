@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\OrdersRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity(repositoryClass: OrdersRepository::class)]
+class Orders
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    /**
+     * @var Collection<int, Product>
+     */
+    #[ORM\ManyToMany(targetEntity: Product::class, inversedBy: 'orders')]
+    private Collection $order_id;
+
+    public function __construct()
+    {
+        $this->order_id = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return Collection<int, Product>
+     */
+    public function getOrderId(): Collection
+    {
+        return $this->order_id;
+    }
+
+    public function addOrderId(Product $orderId): static
+    {
+        if (!$this->order_id->contains($orderId)) {
+            $this->order_id->add($orderId);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderId(Product $orderId): static
+    {
+        $this->order_id->removeElement($orderId);
+
+        return $this;
+    }
+}
