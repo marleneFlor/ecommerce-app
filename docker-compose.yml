@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    container_name: symfony_app
+    ports:
+      - "8081:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      # El @ es el nombre del container donde está la base de datos (db)
+      DATABASE_URL: "mysql://db_user:db_password@db:3306/symfony_db?serverVersion=8.0.32&charset=utf8mb4"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: symfony_db
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: symfony_db
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
