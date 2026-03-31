@@ -10,10 +10,11 @@
 controllers:
     resource: routing.controllers
 
+health:
+  path: /health
+  controller: App\Shared\UI\HealthController
+  methods: [ GET ]
+
 _users:
   resource: routes/users/routes.yaml
 
-health:
-  path: /health
-  controller: Mapping\UI\Controller\Health\HealthController
-  methods: [ GET ]

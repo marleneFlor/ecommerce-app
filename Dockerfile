@@ -15,7 +15,8 @@ RUN curl -sS https://get.symfony.com/cli/installer | bash \
 
 WORKDIR /var/www/html
 
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
+    && sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 # We leave composer install commented out for dev, as we use volumes
 # RUN composer install

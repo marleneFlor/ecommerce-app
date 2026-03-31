@@ -1,4 +1,9 @@
-health:
-  path: /health
-  controller: Mapping\UI\Controller\Health\HealthController
+get_users:
+  path: /users
+  controller: App\Users\UI\ListUsersController
+  methods: [ GET ]
+
+get_user_by_id:
+  path: /users/{id}
+  controller: App\Users\UI\GetUserByIdController
   methods: [ GET ]
