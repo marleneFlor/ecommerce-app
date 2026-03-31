@@ -19,5 +19,28 @@ services:
     App\:
         resource: '../src/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # Etiqueta todos los QueryHandlers para que el bus pueda inyectarlos
+    _instanceof:
+        App\Shared\Application\Query\QueryHandler:
+            tags: ['app.query_handler']
+
+    # El bus recibe todos los handlers etiquetados como iterable
+    App\Shared\Infrastructure\Bus\InMemoryQueryBus:
+        arguments:
+            - !tagged_iterator app.query_handler
+
+    # El alias permite inyectar la interfaz en lugar de la clase concreta
+    App\Shared\Application\Query\QueryBus:
+        alias: App\Shared\Infrastructure\Bus\InMemoryQueryBus
+
+    App\Users\Domain\UsersRepositoryInterface:
+        alias: App\Users\Infrastructure\UsersRepository
+
+    # Los controllers deben ser públicos para que Symfony pueda instanciarlos desde el container
+    App\Users\UI\:
+        resource: '../src/Users/UI/'
+        tags: ['controller.service_arguments']
+
+    App\Shared\UI\:
+        resource: '../src/Shared/UI/'
+        tags: ['controller.service_arguments']
