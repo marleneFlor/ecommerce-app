@@ -18,3 +18,9 @@ health:
 _users:
   resource: routes/users/routes.yaml
 
+_products:
+  resource: routes/products/routes.yaml
+
+_orders:
+  resource: routes/orders/routes.yaml
+

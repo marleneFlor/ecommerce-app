@@ -1,0 +1,9 @@
+get_products:
+  path: /products
+  controller: App\Products\UI\ListProductsController
+  methods: [ GET ]
+
+get_product_by_id:
+  path: /products/{id}
+  controller: App\Products\UI\GetProductByIdController
+  methods: [ GET ]
