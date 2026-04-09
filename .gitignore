@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env
 /.env.local
@@ -9,3 +8,15 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.claude/
+
+# macOS
+.DS_Store
+
+# Docker overrides
+docker-compose.override.yml
