@@ -36,6 +36,12 @@ services:
     App\Users\Domain\UsersRepositoryInterface:
         alias: App\Users\Infrastructure\UsersRepository
 
+    App\Products\Domain\ProductsRepositoryInterface:
+        alias: App\Products\Infrastructure\ProductsRepository
+
+    App\Orders\Domain\OrdersRepositoryInterface:
+        alias: App\Orders\Infrastructure\OrdersRepository
+
     # Los controllers deben ser públicos para que Symfony pueda instanciarlos desde el container
     App\Users\UI\:
         resource: '../src/Users/UI/'
@@ -43,4 +49,12 @@ services:
 
     App\Shared\UI\:
         resource: '../src/Shared/UI/'
+        tags: ['controller.service_arguments']
+
+    App\Products\UI\:
+        resource: '../src/Products/UI/'
+        tags: ['controller.service_arguments']
+
+    App\Orders\UI\:
+        resource: '../src/Orders/UI/'
         tags: ['controller.service_arguments']

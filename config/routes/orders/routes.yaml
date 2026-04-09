@@ -1,0 +1,9 @@
+get_orders:
+  path: /orders
+  controller: App\Orders\UI\ListOrdersController
+  methods: [ GET ]
+
+get_order_by_id:
+  path: /orders/{id}
+  controller: App\Orders\UI\GetOrderByIdController
+  methods: [ GET ]
