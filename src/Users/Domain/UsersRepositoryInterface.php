@@ -11,5 +11,6 @@ interface UsersRepositoryInterface
     /** @return User[] */
     public function findAll(): array;
 
-    public function searchById(string $id): ?User;
+    /** @throws UserNotFoundException */
+    public function searchById(string $id): User;
 }

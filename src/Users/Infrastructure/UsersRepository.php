@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Users\Infrastructure;
 
 use App\Entity\User;
+use App\Users\Domain\UserNotFoundException;
 use App\Users\Domain\UsersRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -27,12 +28,18 @@ class UsersRepository extends ServiceEntityRepository implements UsersRepository
             ->getResult();
     }
 
-    public function searchById(string $id): ?User
+    public function searchById(string $id): User
     {
-        return $this->createQueryBuilder('u')
+        $user = $this->createQueryBuilder('u')
             ->where('u.id = :id')
             ->setParameter('id', $id)
             ->getQuery()
             ->getOneOrNullResult();
+
+        if ($user === null) {
+            throw UserNotFoundException::withId($id);
+        }
+
+        return $user;
     }
 }

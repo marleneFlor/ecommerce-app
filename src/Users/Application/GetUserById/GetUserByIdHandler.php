@@ -14,7 +14,7 @@ final class GetUserByIdHandler implements QueryHandler
     {
     }
 
-    public function __invoke(GetUserByIdQuery $query): ?User
+    public function __invoke(GetUserByIdQuery $query): User
     {
         return $this->repository->searchById($query->id);
     }

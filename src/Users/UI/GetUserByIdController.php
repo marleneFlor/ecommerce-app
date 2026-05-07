@@ -6,6 +6,7 @@ namespace App\Users\UI;
 
 use App\Shared\Application\Query\QueryBus;
 use App\Users\Application\GetUserById\GetUserByIdQuery;
+use App\Users\Domain\UserNotFoundException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,10 +19,10 @@ class GetUserByIdController
 
     public function __invoke(Request $request, string $id): JsonResponse
     {
-        $user = $this->queryBus->ask(GetUserByIdQuery::create($id));
-
-        if ($user === null) {
-            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        try {
+            $user = $this->queryBus->ask(GetUserByIdQuery::create($id));
+        } catch (UserNotFoundException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
 
         return new JsonResponse([
