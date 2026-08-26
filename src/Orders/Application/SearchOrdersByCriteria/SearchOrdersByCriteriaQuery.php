@@ -11,8 +11,7 @@ final readonly class SearchOrdersByCriteriaQuery implements Query
     private function __construct(
         public ?int $userId,
         public ?int $productId,
-        public ?string $createdFrom,
-        public ?string $createdTo,
+        public ?string $createdAt,
         public int $offset,
         public int $limit,
     ) {
@@ -21,11 +20,10 @@ final readonly class SearchOrdersByCriteriaQuery implements Query
     public static function create(
         ?int $userId = null,
         ?int $productId = null,
-        ?string $createdFrom = null,
-        ?string $createdTo = null,
+        ?string $createdAt = null,
         int $offset = 0,
         int $limit = 20,
     ): self {
-        return new self($userId, $productId, $createdFrom, $createdTo, $offset, $limit);
+        return new self($userId, $productId, $createdAt, $offset, $limit);
     }
 }

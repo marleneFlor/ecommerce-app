@@ -53,14 +53,9 @@ final class OrdersRepository extends ServiceEntityRepository implements OrdersRe
                ->setParameter('productId', $criteria->productId);
         }
 
-        if ($criteria->createdFrom !== null) {
-            $qb->andWhere('o.createdAt >= :createdFrom')
-               ->setParameter('createdFrom', $criteria->createdFrom);
-        }
-
-        if ($criteria->createdTo !== null) {
-            $qb->andWhere('o.createdAt <= :createdTo')
-               ->setParameter('createdTo', $criteria->createdTo);
+        if ($criteria->createdAt !== null) {
+            $qb->andWhere('o.createdAt = :createdAt')
+               ->setParameter('createdAt', $criteria->createdAt);
         }
 
         return $qb->orderBy('o.createdAt', 'DESC')

@@ -9,8 +9,7 @@ final readonly class OrderSearchCriteria
     private function __construct(
         public ?int $userId,
         public ?int $productId,
-        public ?\DateTimeInterface $createdFrom,
-        public ?\DateTimeInterface $createdTo,
+        public ?\DateTimeInterface $createdAt,
         public Pagination $pagination,
     ) {
     }
@@ -18,15 +17,13 @@ final readonly class OrderSearchCriteria
     public static function create(
         ?int $userId = null,
         ?int $productId = null,
-        ?\DateTimeInterface $createdFrom = null,
-        ?\DateTimeInterface $createdTo = null,
+        ?\DateTimeInterface $createdAt = null,
         ?Pagination $pagination = null,
     ): self {
         return new self(
             $userId,
             $productId,
-            $createdFrom,
-            $createdTo,
+            $createdAt,
             $pagination ?? Pagination::create(),
         );
     }

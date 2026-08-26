@@ -18,18 +18,16 @@ final class SearchOrdersController
 
     public function __invoke(Request $request): JsonResponse
     {
-        $userId      = $request->query->get('userId');
-        $productId   = $request->query->get('productId');
-        $createdFrom = $request->query->get('createdFrom');
-        $createdTo   = $request->query->get('createdTo');
+        $userId    = $request->query->get('userId');
+        $productId = $request->query->get('productId');
+        $createdAt = $request->query->get('createdAt');
 
         $orders = $this->queryBus->ask(SearchOrdersByCriteriaQuery::create(
-            userId:      $userId !== null ? (int) $userId : null,
-            productId:   $productId !== null ? (int) $productId : null,
-            createdFrom: $createdFrom,
-            createdTo:   $createdTo,
-            offset:      (int) $request->query->get('offset', 0),
-            limit:       (int) $request->query->get('limit', 20),
+            userId:    $userId !== null ? (int) $userId : null,
+            productId: $productId !== null ? (int) $productId : null,
+            createdAt: $createdAt,
+            offset:    (int) $request->query->get('offset', 0),
+            limit:     (int) $request->query->get('limit', 20),
         ));
 
         $data = array_map(

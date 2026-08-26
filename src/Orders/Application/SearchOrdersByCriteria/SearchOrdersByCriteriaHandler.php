@@ -22,8 +22,7 @@ final class SearchOrdersByCriteriaHandler implements QueryHandler
         $criteria = OrderSearchCriteria::create(
             userId: $query->userId,
             productId: $query->productId,
-            createdFrom: $query->createdFrom !== null ? new \DateTimeImmutable($query->createdFrom) : null,
-            createdTo: $query->createdTo !== null ? new \DateTimeImmutable($query->createdTo) : null,
+            createdAt: $query->createdAt !== null ? new \DateTimeImmutable($query->createdAt) : null,
             pagination: Pagination::create($query->offset, $query->limit),
         );
 
