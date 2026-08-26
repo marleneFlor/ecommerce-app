@@ -15,6 +15,7 @@
 .vscode/
 *.iml
 .claude/
+.editorconfig
 
 # macOS
 .DS_Store
