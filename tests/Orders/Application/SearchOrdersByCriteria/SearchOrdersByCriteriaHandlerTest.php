@@ -7,182 +7,144 @@ namespace App\Tests\Orders\Application\SearchOrdersByCriteria;
 use App\Entity\Order;
 use App\Orders\Application\SearchOrdersByCriteria\SearchOrdersByCriteriaHandler;
 use App\Orders\Application\SearchOrdersByCriteria\SearchOrdersByCriteriaQuery;
-use App\Orders\Domain\Model\OrderSearchCriteria;
-use App\Orders\Domain\OrdersRepositoryInterface;
-use PHPUnit\Framework\MockObject\MockObject;
+use App\Tests\Orders\Infrastructure\OrderMother;
+use App\Tests\Orders\Infrastructure\SearchOrderByCriteriaRepositoryFake;
 use PHPUnit\Framework\TestCase;
 
+/*
+    NINGUN DATO
+    ALGUN DATO ->
+        FECHA INCORRECTA PARA DATETIME
+    TODOS LOS DATOS
+
+    INPUT OK, DB SIN DATOS
+    INPUT OK, DB CON DATOS MATCH
+*/
 final class SearchOrdersByCriteriaHandlerTest extends TestCase
 {
-    private OrdersRepositoryInterface&MockObject $repository;
+    private SearchOrderByCriteriaRepositoryFake $repository;
     private SearchOrdersByCriteriaHandler $handler;
+
+    // podemos poner givenNOrders con un faker??
+    private function givenThreeOrders(): void
+    {
+        $this->repository->add(
+            OrderMother::create(id: 1, userId: 42, productIds: [15], createdAt: '2026-01-01 00:00:00'),
+            OrderMother::create(id: 2, userId: 42, productIds: [15, 99], createdAt: '2026-03-01 00:00:00'),
+            OrderMother::create(id: 3, userId: 7, productIds: [15], createdAt: '2026-02-01 00:00:00'),
+        );
+    }
+
+    /**
+     * @param Order[] $orders
+     *
+     * @return int[]
+     */
+    private function idsOf(array $orders): array
+    {
+        return array_map(static fn (Order $order): int => (int) $order->getId(), $orders);
+    }
 
     protected function setUp(): void
     {
-        $this->repository = $this->createMock(OrdersRepositoryInterface::class);
+        $this->repository = new SearchOrderByCriteriaRepositoryFake();
         $this->handler = new SearchOrdersByCriteriaHandler($this->repository);
     }
 
+    /* NINGUN DATO: sin filtros devuelve todo, del mas nuevo al mas viejo */
     public function testItSearchesWithNoFiltersUsingDefaultPagination(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, null, null, null, 0, 20),
-            [],
-        );
+        $this->givenThreeOrders();
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create());
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create());
+
+        // We can also return the orders and check the order of the ids
+        $this->assertSame([2, 3, 1], $this->idsOf($orders));
+
+        $criteria = $this->repository->lastCriteria();
+        $this->assertNotNull($criteria);
+        $this->assertNull($criteria->userId);
+        $this->assertNull($criteria->productId);
+        $this->assertNull($criteria->createdAt);
+        $this->assertSame(0, $criteria->pagination->offset);
+        $this->assertSame(20, $criteria->pagination->limit);
     }
 
-    public function testItFiltersByUserId(): void
+    /* ALGUN DATO: solo el usuario */
+    public function testItSearchesFilteringOnlyByUser(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, 42, null, null, null, 0, 20),
-            [],
-        );
+        $this->givenThreeOrders();
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(userId: 42));
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(userId: 42));
+
+        $this->assertSame([2, 1], $this->idsOf($orders));
     }
 
-    public function testItFiltersByProductId(): void
+    /* ALGUN DATO: solo el producto */
+    public function testItSearchesFilteringOnlyByProduct(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, 15, null, null, 0, 20),
-            [],
-        );
+        $this->givenThreeOrders();
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(productId: 15));
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(productId: 99));
+
+        $this->assertSame([2], $this->idsOf($orders));
     }
 
-    public function testItFiltersByCreatedFrom(): void
+    /* TODOS LOS DATOS + INPUT OK, DB CON DATOS MATCH */
+    public function testItSearchesWithAllTheFiltersAtOnce(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, null, '2026-01-01', null, 0, 20),
-            [],
-        );
+        $this->givenThreeOrders();
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(createdFrom: '2026-01-01'));
-    }
-
-    public function testItFiltersByCreatedTo(): void
-    {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, null, null, '2026-01-31', 0, 20),
-            [],
-        );
-
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(createdTo: '2026-01-31'));
-    }
-
-    public function testItFiltersByDateRange(): void
-    {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, null, '2026-01-01', '2026-01-31', 0, 20),
-            [],
-        );
-
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(
-            createdFrom: '2026-01-01',
-            createdTo: '2026-01-31',
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(
+            userId: 42,
+            productId: 99,
+            createdAt: '2026-03-01',
+            offset: 0,
+            limit: 20,
         ));
+
+        $this->assertSame([2], $this->idsOf($orders));
     }
 
-    public function testItCombinesAllFilters(): void
+
+    /* INPUT OK, DB SIN DATOS */
+    public function testItReturnsNothingWhenThereAreNoOrdersStored(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, 7, 9, '2026-02-01', '2026-02-10', 40, 10),
-            [],
-        );
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(userId: 42));
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(
-            userId: 7,
-            productId: 9,
-            createdFrom: '2026-02-01',
-            createdTo: '2026-02-10',
-            offset: 40,
-            limit: 10,
-        ));
+        $this->assertSame([], $orders);
+        $this->assertSame(1, $this->repository->timesSearched());
     }
 
-    public function testItAppliesCustomPagination(): void
+    /* INPUT OK, DB CON DATOS PERO SIN MATCH */
+    public function testItReturnsNothingWhenNoOrderMatchesTheCriteria(): void
     {
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, null, null, null, null, 30, 5),
-            [],
-        );
+        $this->givenThreeOrders();
 
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(offset: 30, limit: 5));
+        $orders = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(userId: 999));
+
+        $this->assertSame([], $orders);
     }
 
-    public function testItReturnsOrdersFromRepository(): void
+
+    /* FECHA INCORRECTA PARA DATETIME */
+    public function testItThrowsWhenCreatedAtIsNotAValidDate(): void
     {
-        $orders = [new Order(), new Order()];
+        $this->expectException(\DateMalformedStringException::class);
 
-        $this->expectCriteriaAndReturn(
-            fn (OrderSearchCriteria $criteria): bool
-                => $this->assertCriteria($criteria, 1, null, null, null, 0, 20),
-            $orders,
-        );
-
-        $result = $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(userId: 1));
-
-        self::assertSame($orders, $result);
+        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(createdAt: 'invalid-date'));
     }
 
-    public function testItThrowsWhenCreatedFromIsInvalidDate(): void
+    public function testItDoesNotReachTheRepositoryWhenTheDateIsInvalid(): void
     {
-        $this->repository->expects($this->never())->method('searchByCriteria');
-        $this->expectException(\Exception::class);
-
-        $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(createdFrom: 'invalid-date'));
-    }
-
-    /** @param Order[] $return */
-    private function expectCriteriaAndReturn(callable $criteriaAssertion, array $return): void
-    {
-        $this->repository
-            ->expects($this->once())
-            ->method('searchByCriteria')
-            ->with($this->callback($criteriaAssertion))
-            ->willReturn($return);
-    }
-
-    private function assertCriteria(
-        OrderSearchCriteria $criteria,
-        ?int $expectedUserId,
-        ?int $expectedProductId,
-        ?string $expectedCreatedFrom,
-        ?string $expectedCreatedTo,
-        int $expectedOffset,
-        int $expectedLimit,
-    ): bool {
-        self::assertSame($expectedUserId, $criteria->userId);
-        self::assertSame($expectedProductId, $criteria->productId);
-
-        if ($expectedCreatedFrom === null) {
-            self::assertNull($criteria->createdFrom);
-        } else {
-            self::assertInstanceOf(\DateTimeInterface::class, $criteria->createdFrom);
-            self::assertSame($expectedCreatedFrom, $criteria->createdFrom?->format('Y-m-d'));
+        try {
+            $this->handler->__invoke(SearchOrdersByCriteriaQuery::create(createdAt: 'invalid-date'));
+        } catch (\DateMalformedStringException) {
+            // nada
         }
 
-        if ($expectedCreatedTo === null) {
-            self::assertNull($criteria->createdTo);
-        } else {
-            self::assertInstanceOf(\DateTimeInterface::class, $criteria->createdTo);
-            self::assertSame($expectedCreatedTo, $criteria->createdTo?->format('Y-m-d'));
-        }
-
-        self::assertSame($expectedOffset, $criteria->pagination->offset);
-        self::assertSame($expectedLimit, $criteria->pagination->limit);
-
-        return true;
+        // no llega a buscar porque falló
+        $this->assertSame(0, $this->repository->timesSearched());
     }
+
 }
